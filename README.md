@@ -70,7 +70,10 @@ $ oc project prometheus-grafana
 ```
 
 - From OperatorHub, deploy the _Grafana operator_ into your openshift project.
-- You can now deploy the Grafana instance itself by applying the file `kieserver-grafana.yaml`.
+- You can now deploy the Grafana instance itself by applying the file `kieserver-grafana.yaml`, this will:
+  - Create a Grafana Data Source linked to the Prometheus service created earlier.
+  - Create a Grafana instance.
+  - Create a Grafana Dashboard instance, with a sample Kie Server Dashboard
 
 ```bash
 $ oc apply -f kieserver-grafana.yaml
