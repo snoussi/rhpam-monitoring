@@ -1,5 +1,7 @@
 # Monitoring RHPAM's Kie Server with Prometheus and Grafana
 
+![Monitoring RHPAM's Kie Server with Prometheus and Grafana explained architecture](img/kieserver-prometheus-grafana.png)
+
 ## RHPAM's Kie Server
 
 - From OperatorHub, deploy the _Business Automation operator_ into your openshift project.
@@ -77,4 +79,10 @@ $ oc project prometheus-grafana
 
 ```bash
 $ oc apply -f kieserver-grafana.yaml
+```
+
+- Visit the Grafana route and open the sample Kie Server Dashboard.
+
+```bash
+$ echo https://$(oc get route grafana-route --template='{{ .spec.host }}')
 ```
