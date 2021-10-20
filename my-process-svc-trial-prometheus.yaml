@@ -1,0 +1,35 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: my-process-svc-trial
+spec:
+  environment: rhpam-trial
+  commonConfig:
+    adminUser: pamAdmin
+    adminPassword: pamAdmin
+  objects:
+    servers:
+    - env:
+      - name: PROMETHEUS_SERVER_EXT_DISABLED
+        value: "false"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    description: Expose Kie Server's Prometheus metrics 
+  labels:
+    app: my-process-svc-trial
+    application: my-process-svc-trial
+    metrics: kieserver
+  name: kieserver-metrics
+spec:
+  ports:
+    - name: web
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    deploymentConfig: my-process-svc-trial-kieserver
+  sessionAffinity: None
+  type: ClusterIP

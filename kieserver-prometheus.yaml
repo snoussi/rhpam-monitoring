@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kieserver-metrics-secret
+  labels:
+    app: kieserver-service-monitor
+type: Opaque 
+stringData: 
+  username: pamAdmin 
+  password: pamAdmin
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kieserver-service-monitor
+  labels:
+    app: kieserver-service-monitor
+spec:
+  selector:
+    matchLabels:
+      metrics: kieserver
+  endpoints:
+    - interval: 5s
+      path: /services/rest/metrics
+      port: web
+      basicAuth:
+        password:
+          name: kieserver-metrics-secret
+          key: password
+        username:
+          name: kieserver-metrics-secret
+          key: username
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kieserver-prometheus
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kieserver-prometheus
+spec:
+  type: NodePort
+  ports:
+  - name: web
+    port: 9090
+    protocol: TCP
+    targetPort: web
+  selector:
+    prometheus: kieserver-prometheus
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kieserver-prometheus
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["get"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kieserver-prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kieserver-prometheus
+subjects:
+- kind: ServiceAccount
+  name: kieserver-prometheus
+  namespace: prometheus-grafana
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: kieserver-prometheus
+spec:
+  serviceAccountName: kieserver-prometheus
+  serviceMonitorSelector:
+    matchLabels:
+      app: kieserver-service-monitor
+  alerting:
+    alertmanagers:
+      - namespace: monitoring
+        name: alertmanager-main
+        port: web
+  probeSelector: {}
+  podMonitorSelector: {}
+  replicas: 2
+  ruleSelector: {}
